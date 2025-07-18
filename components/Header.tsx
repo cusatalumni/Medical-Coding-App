@@ -16,7 +16,12 @@ const Header: React.FC = () => {
   return (
     <header className="bg-white shadow-md">
 <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-  <Link to={user ? "https://www.coding-online.net" : "#"} className="flex items-center space-x-3">
+  <a
+    href="https://www.coding-online.net"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="flex items-center space-x-3"
+  >
     <img
       src="https://www.coding-online.net/wp-content/uploads/2019/01/cropped-coding-logo-vectorised-150x150-1.png"
       alt="Medical Coding Online Logo"
@@ -24,10 +29,14 @@ const Header: React.FC = () => {
       height={50}
     />
     <div className="flex flex-col">
-      <span className="text-3xl font-bold text-slate-900 font-serif">Medical Coding Online</span>
-      <span className="text-md text-slate-500 font-serif">www.coding-online.net</span>
+      <span className="text-3xl font-bold text-slate-900 font-serif">
+        Medical Coding Online
+      </span>
+      <span className="text-md text-slate-500 font-serif">
+        www.coding-online.net
+      </span>
     </div>
-  </Link>
+  </a>
         <div className="flex items-center space-x-4">
           {user ? (
             <>
