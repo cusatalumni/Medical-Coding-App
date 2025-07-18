@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -46,7 +47,7 @@ const Dashboard: React.FC = () => {
                     </div>
                     <p className="text-slate-600 flex-grow mb-6">The full exam experience, designed to mimic official certification tests.</p>
                     <ul className="text-slate-600 space-y-2 mb-6">
-                        <li className="flex items-start"><CheckCircle size={18} className="text-green-500 mr-2 mt-1 shrink-0" /><span>100 questions covering all major topics.</span></li>
+                        <li className="flex items-start"><CheckCircle size={18} className="text-green-500 mr-2 mt-1 shrink-0" /><span>10 questions covering all major topics.</span></li>
                         <li className="flex items-start"><CheckCircle size={18} className="text-green-500 mr-2 mt-1 shrink-0" /><span>Receive a score upon completion.</span></li>
                         <li className="flex items-start"><CheckCircle size={18} className="text-green-500 mr-2 mt-1 shrink-0" /><span>Earn a downloadable PDF certificate for scores of 60% or higher.</span></li>
                     </ul>

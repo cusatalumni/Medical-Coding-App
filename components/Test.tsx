@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -22,25 +23,24 @@ const Test: React.FC<TestProps> = ({ testType }) => {
   const { user } = useAuth();
 
   useEffect(() => {
-    const loadQuestions = async () => {
+    const fetchQuestions = async () => {
+      try {
         setIsLoading(true);
-        try {
-            const fetchedQuestions = await googleSheetsService.getQuestions(testType);
-            if (fetchedQuestions.length === 0) {
-                toast.error("Could not load questions. Please check your question bank sheet.");
-                navigate('/dashboard');
-                return;
-            }
-            setQuestions(fetchedQuestions);
-        } catch (error: any) {
-            console.error("Error loading questions:", error);
-            toast.error(error.message || 'Failed to load the test.');
+        const fetchedQuestions = await googleSheetsService.getQuestions(testType);
+        if (fetchedQuestions.length === 0) {
+            toast.error("Could not load questions. Please try again later.");
             navigate('/dashboard');
-        } finally {
-            setIsLoading(false);
+            return;
         }
+        setQuestions(fetchedQuestions);
+      } catch (error) {
+        toast.error('Failed to load the test.');
+        navigate('/dashboard');
+      } finally {
+        setIsLoading(false);
+      }
     };
-    loadQuestions();
+    fetchQuestions();
      // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [testType, navigate]);
 
@@ -73,7 +73,6 @@ const Test: React.FC<TestProps> = ({ testType }) => {
     }
 
     setIsSubmitting(true);
-    toast.loading("Submitting your test...");
     try {
         const userAnswers: UserAnswer[] = Array.from(answers.entries()).map(([questionId, answer]) => ({
             questionId,
@@ -81,13 +80,11 @@ const Test: React.FC<TestProps> = ({ testType }) => {
         }));
         
         const result = await googleSheetsService.submitTest(user.id, userAnswers, testType);
-        toast.dismiss();
         toast.success("Test submitted successfully!");
         navigate(`/results/${result.testId}`);
 
-    } catch(error: any) {
-        toast.dismiss();
-        toast.error(error.message || "Failed to submit the test. Please try again.");
+    } catch(error) {
+        toast.error("Failed to submit the test. Please try again.");
     } finally {
         setIsSubmitting(false);
     }
@@ -102,7 +99,7 @@ const Test: React.FC<TestProps> = ({ testType }) => {
   }
 
   const currentQuestion = questions[currentQuestionIndex];
-  const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+  const progress = ((currentQuestionIndex + 1) / questions.length) * 10;
 
   return (
     <div className="max-w-4xl mx-auto bg-white p-6 sm:p-8 rounded-xl shadow-lg">
@@ -136,7 +133,7 @@ const Test: React.FC<TestProps> = ({ testType }) => {
       </div>
       
       {/* Navigation */}
-      <div className="flex justify-between items-center mt-8">
+      <div className="flex justify-between items-center">
         <button
           onClick={handlePrev}
           disabled={currentQuestionIndex === 0 || isSubmitting}
@@ -147,25 +144,18 @@ const Test: React.FC<TestProps> = ({ testType }) => {
         </button>
         
         {currentQuestionIndex === questions.length - 1 ? (
-          <div className="text-right">
-              <button
-                onClick={handleSubmit}
-                disabled={isSubmitting || answers.size !== questions.length}
-                className="flex items-center space-x-2 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg transition disabled:bg-green-300"
-              >
-                {isSubmitting ? <Spinner /> : <><Send size={16}/> <span>Submit</span></>}
-              </button>
-              {(answers.size !== questions.length) && !isSubmitting && (
-                <p className="text-sm text-red-600 mt-2 font-semibold">
-                  {questions.length - answers.size} question(s) left to answer.
-                </p>
-              )}
-          </div>
+          <button
+            onClick={handleSubmit}
+            disabled={isSubmitting || answers.size !== questions.length}
+            className="flex items-center space-x-2 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg transition disabled:bg-green-300"
+          >
+            {isSubmitting ? <Spinner /> : <><Send size={16}/> <span>Submit</span></>}
+          </button>
         ) : (
           <button
             onClick={handleNext}
             disabled={isSubmitting}
-            className="flex items-center space-x-2 bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-lg transition disabled:opacity-50"
+            className="flex items-center space-x-2 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-2 px-4 rounded-lg transition"
           >
             <span>Next</span>
             <ChevronRight size={16} />
