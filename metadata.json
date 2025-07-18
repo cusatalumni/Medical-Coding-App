@@ -1,0 +1,5 @@
+{
+  "name": "Medical Coding Practice Exam",
+  "description": "An online platform to practice for medical coding certification exams. Take free and paid tests to assess your knowledge in ICD-10-CM, CPT, and HCPCS coding.",
+  "requestFramePermissions": []
+}
