@@ -1,41 +1,46 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { googleSheetsService } from '../services/googleSheetsService';
+import { mockTestResults } from '../services/googleSheetsService';
 import type { TestResult } from '../types';
 import Spinner from './Spinner';
 import { Check, X, FileDown } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
 
 const Results: React.FC = () => {
     const { testId } = useParams<{ testId: string }>();
     const navigate = useNavigate();
-    const { user } = useAuth();
     const [result, setResult] = useState<TestResult | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        if (!testId || !user) {
-            toast.error("Test ID or user information is missing.");
+        if (!testId) {
+            toast.error("Test ID is missing.");
             navigate('/dashboard');
             return;
         }
 
+        // This is a simplification. In a real app, you'd fetch results by ID.
+        // Here we just grab the latest result from the mock service's memory.
         const fetchResult = async () => {
             setIsLoading(true);
-            try {
-                const foundResult = await googleSheetsService.getTestResult(testId, user.id);
+            // Simulating a fetch. In a real app, you'd call a getResultById(testId)
+            // But our mock service stores results in an array, so we find it.
+            const foundResult = mockTestResults.find(r => r.testId === testId);
+            
+            await new Promise(res => setTimeout(res, 500)); // simulate delay
+            
+            if (foundResult) {
                 setResult(foundResult);
-            } catch (error: any) {
-                toast.error(error.message || "Could not find your test results.");
+            } else {
+                toast.error("Could not find your test results.");
                 navigate('/dashboard');
-            } finally {
-                setIsLoading(false);
             }
+            setIsLoading(false);
         };
         fetchResult();
          // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [testId, user, navigate]);
+    }, [testId, navigate]);
 
     if (isLoading) {
         return <div className="flex flex-col items-center justify-center h-64 bg-white rounded-lg shadow-md"><Spinner /><p className="mt-4 text-slate-600">Calculating your results...</p></div>;
@@ -73,7 +78,7 @@ const Results: React.FC = () => {
                 </div>
             )}
             
-            {(result.testType === 'free' || (result.testType === 'paid' && !isPass)) && result.review && (
+            {result.testType === 'free' && (
                 <div>
                     <h2 className="text-2xl font-semibold text-slate-700 mb-4">Answer Review</h2>
                     <div className="space-y-6">
