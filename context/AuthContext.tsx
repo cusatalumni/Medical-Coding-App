@@ -1,45 +1,73 @@
 
-import React, { createContext, useState, useContext, ReactNode } from 'react';
-import type { User } from '../types';
+import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
+import { googleSheetsService } from '../services/googleSheetsService';
+import type { Organization } from '../types';
+import toast from 'react-hot-toast';
 
-interface AuthContextType {
-  user: User | null;
-  paymentSuccess: boolean;
-  login: (user: User) => void;
-  logout: () => void;
-  setPaymentSuccess: (status: boolean) => void;
+interface AppContextType {
+  organizations: Organization[];
+  activeOrg: Organization | null;
+  isLoading: boolean;
+  isInitializing: boolean;
+  setActiveOrgById: (orgId: string) => void;
+  updateActiveOrg: (updatedOrg: Organization) => void;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AppContext = createContext<AppContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [paymentSuccess, setPaymentSuccessState] = useState<boolean>(false);
+export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [activeOrg, setActiveOrg] = useState<Organization | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isInitializing, setIsInitializing] = useState(true);
 
-  const login = (userData: User) => {
-    setUser(userData);
+  useEffect(() => {
+    const initializeApp = async () => {
+      try {
+        await googleSheetsService.initializeAndCategorizeExams();
+        toast.success("Exams ready!", { duration: 2000 });
+      } catch (error) {
+        console.error("Failed to load exams:", error);
+        toast.error("Could not load exam questions. Please refresh.");
+      }
+
+      const allOrgs = googleSheetsService.getOrganizations();
+      setOrganizations(allOrgs);
+      if (allOrgs.length > 0) {
+          setActiveOrg(allOrgs[0]);
+      }
+      setIsInitializing(false);
+      setIsLoading(false);
+    };
+
+    initializeApp();
+  }, []);
+
+  const setActiveOrgById = (orgId: string) => {
+    const org = organizations.find(o => o.id === orgId);
+    if (org) {
+        setActiveOrg(org);
+    }
   };
 
-  const logout = () => {
-    setUser(null);
-    setPaymentSuccessState(false);
+  const updateActiveOrg = (updatedOrg: Organization) => {
+    setOrganizations(prevOrgs => 
+        prevOrgs.map(org => org.id === updatedOrg.id ? updatedOrg : org)
+    );
+    setActiveOrg(updatedOrg);
   };
-
-  const setPaymentSuccess = (status: boolean) => {
-    setPaymentSuccessState(status);
-  }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, paymentSuccess, setPaymentSuccess }}>
+    <AppContext.Provider value={{ organizations, activeOrg, isLoading, isInitializing, setActiveOrgById, updateActiveOrg }}>
       {children}
-    </AuthContext.Provider>
+    </AppContext.Provider>
   );
 };
 
-export const useAuth = (): AuthContextType => {
-  const context = useContext(AuthContext);
+export const useAppContext = (): AppContextType => {
+  const context = useContext(AppContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAppContext must be used within an AppProvider');
   }
   return context;
 };
